@@ -20,7 +20,8 @@
 This file contains lookup tables for the character sets used by Acorn and Commodore computers, as well
 as the BASIC tokens used by Commodore BASIC.
 
-Sources:
+References:
+
 https://www.c64-wiki.com/wiki/BASIC_token
 https://en.wikipedia.org/wiki/PETSCII#Commodore_64_control_characters
 """

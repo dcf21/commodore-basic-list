@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 # list_commodore_basic.py
 #
-# The Python script in this file produces textual listings of Commodore BASIC files.
+# This Python script produces textual listings of 8-bit Commodore BASIC files
+# produced by the Commodore 64, Commodore 16, etc. It supports all the BASIC
+# extensions added in the Commodore 128.
 #
 # Copyright (C) 2022 Dominic Ford <https://dcford.org.uk/>
 #
@@ -18,8 +20,13 @@
 # ----------------------------------------------------------------------------
 
 """
-Produce textual listings of Commodore BASIC files. It is compatible with all 8-bit versions of Commodore BASIC,
+Produce textual listings of Commodore BASIC files. This script is compatible with all 8-bit versions of Commodore BASIC,
 including BASIC 2.0 (C64), BASIC 3.5 (C16, Plus/4) and BASIC 7.0 (C128).
+
+References:
+
+https://www.c64-wiki.com/wiki/BASIC_token
+https://en.wikipedia.org/wiki/PETSCII#Commodore_64_control_characters
 """
 
 import argparse
@@ -80,6 +87,7 @@ def create_listing_from_bytes(byte_list: Iterable):
     # The load address is used to convert the address of BASIC lines into file positions
     load_address = 256 * byte_list[1] + 1
     file_position = 0
+    next_line_position = 0
 
     # Iterate through the file, printing the lines of BASIC code
     while True:
