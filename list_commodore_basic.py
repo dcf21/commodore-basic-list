@@ -6,7 +6,7 @@
 # produced by the Commodore 64, Commodore 16, etc. It supports all the BASIC
 # extensions added in the Commodore 128.
 #
-# Copyright (C) 2022-2024 Dominic Ford <https://dcford.org.uk/>
+# Copyright (C) 2022-2025 Dominic Ford <https://dcford.org.uk/>
 #
 # This code is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -33,12 +33,12 @@ import argparse
 import logging
 import sys
 
-from typing import Iterable
+from typing import Tuple, Union
 
 from constants import petscii_upper, petscii_ctrl, commodore_basic_tokens
 
 
-def create_listing_from_file(filename: str, prg: bool):
+def create_listing_from_file(filename: str, prg: bool) -> Tuple[str, int, bool]:
     """
     Create a textual listing of a Commodore BASIC file.
 
@@ -52,50 +52,50 @@ def create_listing_from_file(filename: str, prg: bool):
 
     # Read BASIC file
     with open(filename, "rb") as f:
-        basic_bytes = f.read()
+        basic_bytes: bytes = f.read()
 
     # If file is in PRG format, remove two bytes of load address
     if prg:
         basic_bytes = basic_bytes[2:]
 
     # Produce listing
-    listing = create_listing_from_bytes(byte_list=basic_bytes)
+    listing: Tuple[str, int, bool] = create_listing_from_bytes(byte_list=basic_bytes)
 
     # Return listing
     return listing
 
 
-def create_listing_from_bytes(byte_list: Iterable):
+def create_listing_from_bytes(byte_list: Union[bytes, bytearray]) -> Tuple[str, int, bool]:
     """
     Create a text listing of a Commodore BASIC file.
 
     :param byte_list:
         The bytes of the BASIC file
     :return:
-        string
+        Tuple of (output text, number of BASIC lines read, error flag)
     """
 
-    output = ""
-    lines_returned = 0
+    output: str = ""
+    lines_returned: int = 0
 
     # Give up immediately if file is too short
-    stream_length = len(byte_list)
+    stream_length: int = len(byte_list)
     if stream_length < 5:
         output += "?FILE TOO SHORT ERROR\n"
         return output, lines_returned, True
 
     # The load address is used to convert the address of BASIC lines into file positions
-    load_address = 256 * byte_list[1] + 1
-    file_position = 0
-    next_line_position = 0
+    load_address: int = 256 * byte_list[1] + 1
+    file_position: int = 0
+    next_line_position: int = 0
 
     # Iterate through the file, printing the lines of BASIC code
     while True:
-        bytes_remaining = stream_length - file_position
+        bytes_remaining: int = stream_length - file_position
 
         # Fetch file position of next line of BASIC
         if bytes_remaining >= 2:
-            next_line_address = byte_list[file_position] + 256 * byte_list[file_position + 1]
+            next_line_address: int = byte_list[file_position] + 256 * byte_list[file_position + 1]
             if next_line_address == 0:
                 return output, lines_returned, False
             next_line_position = next_line_address - load_address
@@ -106,14 +106,14 @@ def create_listing_from_bytes(byte_list: Iterable):
             return output, lines_returned, True
 
         # Print the BASIC line number
-        line_number = byte_list[file_position + 2] + 256 * byte_list[file_position + 3]
+        line_number: int = byte_list[file_position + 2] + 256 * byte_list[file_position + 3]
         output += "{:6d} ".format(line_number)
 
         # Move file position to start of line data
         file_position += 4
 
         # Print line, character by character
-        in_quotes = False
+        in_quotes: bool = False
         while file_position < stream_length:
             current_byte = byte_list[file_position]
             # A zero indicates the end of the BASIC line
@@ -172,9 +172,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create listing of BASIC file
+    program_listing: str
+    lines_returned: int
+    error: bool
     program_listing, lines_returned, error = create_listing_from_file(filename=args.input, prg=args.prg)
 
-    # Output listing of BASIC file to stdout
+    # Output listing of the BASIC file to stdout
     print(program_listing)
 
     # Return status 1 if we didn't find a single valid line of BASIC
